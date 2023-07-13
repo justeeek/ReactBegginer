@@ -54,7 +54,7 @@ function Game( {question, onClickVariant, step} ) {
       <ul>
         {
           question.variants.map((text, index)=> (
-            <li onClick={() => onClickVariant(index)} key={text}>{text}</li>
+            <li onClick={() => onClickVariant(index)}>{text}</li>
           ))
         }
       </ul>
@@ -88,7 +88,7 @@ function App() {
           : (
               <Result correct={correct} />
             )
-      };
+      }
     </div>
   );
 }
