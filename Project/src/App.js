@@ -8,6 +8,9 @@ import { Users } from './components/Users';
 function App() {
   const [users, setUsers] = React.useState([]);
   const [isLoading, setLoading] = React.useState(true);
+  const [searchValue, setSearchValue] = React.useState('');
+  const [invites, setinvites] = React.useState([]);
+  const [success, setSuccess] = React.useState(false);
   
   React.useEffect(() => {
     fetch('https://reqres.in/api/users').then(result => result.json())
@@ -21,10 +24,39 @@ function App() {
     .finally(() => setLoading(false));
   }, [])
 
+    const onChangeSearchValue = (event) => {
+      setSearchValue(event.target.value);
+    }
+
+    const onClickInvite = (id) => {
+      if (invites.includes(id)) {
+        setinvites(prev => prev.filter(_id => _id != id)) // проверяем есть ли выбранный id в приглашенных, и если есть, то удаляем
+      }
+      else {
+        setinvites(prev => [...prev, id]); // иначе добавляем новый id ко всем прошлым уже добавленным
+      }
+    }
+
+    const onClickSendInvites = () => {
+      setSuccess(true);
+    }
+
   return (
     <div className="App">
-      <Users items={users} isLoading={isLoading} />
-      {/* <Success /> */}
+      {
+        success ? (
+          <Success count={invites.length} />
+        ) : (
+          <Users 
+        items={users} 
+        isLoading={isLoading} 
+        onChangeSearchValue={onChangeSearchValue} 
+        searchValue={searchValue}
+        invites={invites}
+        onClickInvite={onClickInvite}
+        onClickSendInvites={onClickSendInvites} />
+        )
+      }
     </div>
   );
 }
