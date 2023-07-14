@@ -1,69 +1,84 @@
 import React from 'react';
-import { Block } from './Block';
-import { useRef } from 'react';
+import { Collection } from './Collection';
 import './index.scss';
 
+const cats = [
+    { "name": "Все" },
+    { "name": "Море" },
+    { "name": "Горы" },
+    { "name": "Архитектура" },
+    { "name": "Города" }
+]
+
+
 function App() {
-  //const [Valute, setValute] = React.useState({});
-  const valuteRef = useRef({});
-  const [fromCurrency, setFromCurrency] = React.useState('BYN');
-  const [toCurrency, setToCurrency] = React.useState('USD');
-  const [fromPrice, setFromPrice] = React.useState(0);
-  const [toPrice, setToPrice] = React.useState(0);
+  const [collections, setCollections] = React.useState([]);
+  const [searchValue, setSearchValue] = React.useState('');
+  const [categoryId, setCategoryId] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [page, setPage] = React.useState(1);
+
   React.useEffect(() => {
-    fetch('https://www.cbr-xml-daily.ru/daily_json.js')
+    setIsLoading(true);
+    const category = categoryId ? `category=${categoryId}` : '';
+
+    fetch(
+      `https://64b120e1062767bc4825bc75.mockapi.io/photos?page=${page}&limit=3&${category}`)
     .then((res) => res.json())
     .then((json) => {
-      valuteRef.current = json.Valute;
-      onChangeToPrice(1);
+      setCollections(json);
     })
     .catch((error) => {
       console.warn(error);
-      alert('Не удалось получить информацию');
-    });
-  }, []);
+      alert('Ошибка при получении данных');
+    }).finally(() => setIsLoading(false));
+  }, [categoryId, page]);
 
-  console.log(valuteRef.current[fromCurrency]?.Value);
-  const onChangeFromPrice = (value) => {
-    const kurs = valuteRef.current[fromCurrency]?.Value / valuteRef.current[toCurrency]?.Value;
-    const result = value * kurs;
-  
-   // console.log(kurs);
-   // console.log(Valute);
-   // console.log(Valute.Value);
-    setToPrice(result.toFixed(3));
-    setFromPrice(value);
-  }
-
-  const onChangeToPrice = (value) => {
-    const kurs = valuteRef.current[toCurrency]?.Value / valuteRef.current[fromCurrency]?.Value;
-    const result = value * kurs;
-    setFromPrice(result.toFixed(3));
-    setToPrice(value);
-  }
-
-  React.useEffect(() => {
-    onChangeFromPrice(fromPrice);
-  }, [fromCurrency]);
-
-  React.useEffect(() => {
-    onChangeToPrice(toPrice);
-  }, [toCurrency]);
-  
 
   return (
     <div className="App">
-      <Block 
-        value={fromPrice} 
-        onChangeValue={onChangeFromPrice} 
-        currency={fromCurrency} 
-        onChangeCurrency={setFromCurrency} />
+      <h1>Моя коллекция фотографий</h1>
+      <div className="top">
+        <ul className="tags">
+          {
+            cats.map((obj, i) => (
+            <li 
+              onClick={() => setCategoryId(i)}
+              className={categoryId === i ? 'active' : ''}
+              key={obj.name}>{obj.name}
+            </li>
+            ))}
+        </ul>
+        <input 
+          value={searchValue} 
+          onChange={e => setSearchValue(e.target.value)} 
+          className="search-input" placeholder="Поиск по названию" />
+      </div>
+      <div className="content">
+        {isLoading ? 
+          <h2>Идет загрузка...</h2> : (
+            collections
+        .filter(obj => obj.name.toLowerCase().includes(searchValue.toLocaleLowerCase()))
+        .map((obj, index) => (
+          <Collection
+          key = {index}
+          name={obj.name}
+          images={obj.photos}
+        />
+        ))
+          )
+        }
 
-      <Block 
-        value={toPrice}
-        onChangeValue={onChangeToPrice} 
-        currency={toCurrency} 
-        onChangeCurrency={setToCurrency} />
+        
+      </div>
+      <ul className="pagination">
+        {
+          [...Array(3)].map((_, i) => 
+          <li 
+          onClick={() => setPage(i+1)}
+          className={page === i+1 ? 'active' : ''}>{i + 1}</li>)
+        }
+      </ul>
     </div>
   );
 }
